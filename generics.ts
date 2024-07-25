@@ -1,3 +1,4 @@
+// This is function like react useState()
 function simpleState<T> (initial: T): [() => T, (v: T) => void] {
     let val: T = initial;
     return [
@@ -18,22 +19,17 @@ console.log(st2getter());
 st2setter('str');
 console.log(st2getter());
 
-interface Rank<RankItem> {
-    item: RankItem;
+interface Rank<T> {
+    item: T;
     rank: number;
 }
 
-function ranker<RankItem> (
-    items: RankItem[],
-    rank: (v: RankItem) => number
-): RankItem[] {
+function ranker<T> (items: T[],rank: (v: T) => number): T[] {
 
-    const ranks: Rank<RankItem>[] = items.map((item) => ({
+    const ranks: Rank<T>[] = items.map((item) => ({
         item,
         rank: rank(item),
     }));
-    console.log(`I'm ${items}`);
-        console.log(`I'm ${rank}`);
 
     ranks.sort((a, b) => a.rank - b.rank);
 
