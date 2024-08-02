@@ -1,19 +1,91 @@
-import { ReactNode, useCallback } from 'react';
+import { useState, useEffect, useReducer, useRef, useCallback } from 'react';
 import './App.css';
 
+interface Payload {
+  text: string;
+}
+
+interface Todo {
+  id: number;
+  done: boolean;
+  text: string;
+}
+
+type ActionType =
+  | { type: 'ADD'; text: string }
+  | { type: 'Remove'; id: number }
+
 const App = () => {
-  const onListClick = useCallback((item: string) => {
-    alert(item)
+
+
+  const [payload, setPayload] = useState<Payload | null>(null);
+
+  useEffect(() => {
+    fetch("/data.json")
+      .then((resp) => resp.json())
+      .then((data) => {
+        setPayload(data);
+      });
   }, []);
+
+
+  const [todos, dispatch] = useReducer(
+    (state: Todo[], action: ActionType) => {
+      switch (action.type) {
+        case "ADD":
+          return [
+            ...state,
+            {
+              id: state.length,
+              text: action.text,
+              done: false,
+            }
+          ]
+        case "Remove":
+          return state.filter(({ id }) => id !== action.id)
+        default:
+          throw new Error()
+      }
+    },
+    []
+  );
+
+  const newTodoRef = useRef<HTMLInputElement>(null);
+  const onAddTodo = useCallback(() => {
+    if (newTodoRef.current) {
+      dispatch({
+        type: 'ADD',
+        text: newTodoRef.current.value
+      });
+      newTodoRef.current.value = "";
+    }
+  }, [])
 
   return (
     <div>
-      <Heading title='Introducing' />
-      <Box>
-        Hello Typescript & React
-      </Box>
+      <Heading title='Hook' />
 
-      <List items={['one', 'two', 'three']} onClick={onListClick}/>
+      <div>{JSON.stringify(payload)}</div>
+
+      <Heading title='useReducer' />
+      {todos.map((todo) => (
+        <div key={todo.id}>
+          {todo.text}
+          <button
+            onClick={() =>
+              dispatch ({
+                type: 'Remove',
+                id: todo.id,
+              })
+            }>
+            Remove
+          </button>
+        </div>
+      ))}
+      <div>
+        <input type="text" ref={newTodoRef} />
+        <button onClick={onAddTodo}>Add Todo</button>
+      </div>
     </div>
 
   )
@@ -21,25 +93,5 @@ const App = () => {
 
 const Heading = ({ title }: { title: string }) => <h2>{title}</h2>
 
-const Box = ({ children }: { children: ReactNode }) => <div style={{ padding: '1rem', fontWeight: 'bold' }}>{children}</div>
-
-const List: React.FC<{
-  items: string[];
-  onClick?: (item: string) => void;
-}> = ({items, onClick}) => (
-  <ul>
-    {items.map((item, index) => (
-      <li key={index} onClick={() => onClick?.(item)}>{item}</li>
-    ))}
-  </ul>
-)
-
-// const List = ({items}: {items:string[]}) => (
-//   <ul>
-//     {items.map((item, index) => (
-//       <li key={index}>{item}</li>
-//     ))}
-//   </ul>
-// )
 
 export default App
